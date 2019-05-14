@@ -79,6 +79,12 @@ class SVGP(GPModel):
             X = Minibatch(X, batch_size=minibatch_size, seed=0)
             Y = Minibatch(Y, batch_size=minibatch_size, seed=0)
             
+        # init the super class, accept args
+        GPModel.__init__(self, X, Y, kern, likelihood, mean_function, num_latent, **kwargs)
+        self.num_data = num_data or X.shape[0]
+        self.q_diag, self.whiten = q_diag, whiten
+        self.feature = features.inducingpoint_wrapper(feat, Z)
+
         if weight is None:
             weight = np.repeat(1., Y.shape[0])[:,None]
         self.weight = weight
@@ -86,13 +92,7 @@ class SVGP(GPModel):
         if data_variance is None:
             data_variance = np.repeat(0., Y.shape[0])[:,None]
         self.data_variance = data_variance
-
-        # init the super class, accept args
-        GPModel.__init__(self, X, Y, kern, likelihood, mean_function, num_latent, **kwargs)
-        self.num_data = num_data or X.shape[0]
-        self.q_diag, self.whiten = q_diag, whiten
-        self.feature = features.inducingpoint_wrapper(feat, Z)
-
+        
         # init variational parameters
         num_inducing = len(self.feature)
         self._init_variational_parameters(num_inducing, q_mu, q_sqrt, q_diag)
